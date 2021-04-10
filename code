@@ -1,0 +1,41 @@
+import yfinance as yf
+import matplotlib
+import matplotlib.ticker as mticker
+import mplfinance
+from math import pi
+import pandas as pd
+import datetime
+from bokeh.plotting import figure, output_file, show
+from bokeh.plotting import ColumnDataSource, figure, output_file, show
+
+x = input("Elegi el Ticker")
+x
+Accion = yf.Ticker(x)
+hist = Accion.history(period="1y")
+hist.reset_index(inplace=True,drop=False)
+
+df = pd.DataFrame(hist)[:-1]
+df["date"] = pd.to_datetime(hist["Date"])
+
+df.values.tolist()
+hist.insert(3,2,"TXAR")
+inc = hist["Close"] > hist["Open"]
+dec = hist["Open"] > hist["Close"]
+w = 12*60*60*1000 # half day in ms
+
+TOOLS = "pan,wheel_zoom,box_zoom,reset,save,hover"
+TOOLTIPS = [
+    ("Precio", "$y"),
+    ("Date", "@2")
+]
+p = figure(x_axis_type="datetime", tools=TOOLS, tooltips=TOOLTIPS, plot_width=1250, title = "Candlestick")
+p.xaxis.major_label_orientation = pi/4
+p.grid.grid_line_alpha=0
+
+p.segment(df.date, hist["High"], df.date, hist["Low"], color="black")
+p.vbar(df.date[inc], w, hist["Open"][inc], hist["Close"][inc], fill_color="#72b562", line_color="black")
+p.vbar(df.date[dec], w, hist["Open"][dec], hist["Close"][dec], fill_color="#F2583E", line_color="black")
+
+output_file("candlestick.html", title="candlestick.py example")
+
+show(p)  # open a browser
